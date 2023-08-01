@@ -1,3 +1,4 @@
+/* Trying to upload table into postico */
 DROP TABLE IF EXISTS air_quality
 
 CREATE TABLE air_quality (
@@ -26,7 +27,6 @@ SELECT SUBSTRING(DATE, 7,4) AS YEAR, SUBSTRING(DATE,4,2) AS MONTH,  SUBSTRING(DA
 , (SUBSTRING(DATE, 7,4) + SUBSTRING(DATE,4,2) +  SUBSTRING(DATE,1,2))
 FROM AIR_QUALITY
 
-
 CREATE VIEW air_quality_clean AS
 	SELECT
 		TO_TIMESTAMP(
@@ -49,15 +49,15 @@ GROUP BY MONTH
 
 /* LAG / LEAD FOR ROLLING AVG*/
 
---If I lived in Beijing for the first half of 2004, how much Benzene have I been exposed to (on average)?
-C6H6_GT
+--Question 2: If I lived in Beijing for the first half of 2004, how much Benzene have I been exposed to (on average)?
 
 SELECT
 SUM(C6H6_GT) AS BENZ_SUM
 FROM AIR_QUALITY_CLEAN
 WHERE datetime >= '2004-01-01 00:00:00' AND datetime < '2004-07-01 00:00:00';
 
--- Which day(s) had the highest average tungsten oxide recorded?
+-- Q3: Which day(s) had the highest average tungsten oxide recorded?
+-- M: Was not sure if I should add results of those columns together; kept all visible and calculated result on the sum of those
 SELECT
 	DATE_1
 	, MAX(PT08_S3_NOx) AS PTO_S3_MAX
@@ -67,13 +67,14 @@ FROM AIR_QUALITY_CLEAN
 GROUP BY DATE_1
 ORDER BY MAX_TOTAL DESC
 
--- What was the greatest delta (difference) between any two hours in temperature? When did this happen? Hint: Maybe lead or lag is useful here. How would your calculation change if I wanted to know the sharpest change in e.g., 3-hour periods, 6-hour... ?
+-- Q4: What was the greatest delta (difference) between any two hours in temperature? When did this happen? Hint: Maybe lead or lag is useful here. How would your calculation change if I wanted to know the sharpest change in e.g., 3-hour periods, 6-hour... ?
 
 CREATE VIEW EX_4 AS
 SELECT
 	  DATETIME
 	, T
 	, LAG(T/*, 2*/) OVER (ORDER BY DATETIME) AS T_PREVIOUS
+	/*, LAG(T, 5) OVER (ORDER BY DATETIME) AS T_6MTHS */
 FROM AIR_QUALITY_CLEAN
 
 SELECT *
@@ -81,7 +82,8 @@ SELECT *
 FROM EX_4
 ORDER BY DIFF DESC
 
---Rank the hottest and coldest (averaged out) days, what were the three hottest and coldest? Were there any ties?
+--Q5: Rank the hottest and coldest (averaged out) days, what were the three hottest and coldest? Were there any ties?
+--M: TWO QUERIES; ONE WITH VIEWS, ANOTHER WITH CTE
 
 /* LAST ONE: use of lag, arythmetic, order byinside window function part. no 3 should be easy */
 DROP VIEW IF EXISTS EX_5
